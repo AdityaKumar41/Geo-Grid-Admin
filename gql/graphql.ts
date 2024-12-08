@@ -119,7 +119,6 @@ export type MutationCreateEmployeeArgs = {
   email: Scalars['String']['input'];
   gender: Scalars['String']['input'];
   name: Scalars['String']['input'];
-  password: Scalars['String']['input'];
   phoneNo: Scalars['String']['input'];
   position: Scalars['String']['input'];
   profileImage: Scalars['String']['input'];
@@ -166,6 +165,7 @@ export type Query = {
   attendances: Array<Attendance>;
   employee?: Maybe<Employee>;
   employees: Array<Employee>;
+  getSignedUrl?: Maybe<Scalars['String']['output']>;
 };
 
 
@@ -192,4 +192,10 @@ export type QueryAttendancePairArgs = {
 
 export type QueryEmployeeArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryGetSignedUrlArgs = {
+  fileName: Scalars['String']['input'];
+  fileType: Scalars['String']['input'];
 };
