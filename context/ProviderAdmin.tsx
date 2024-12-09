@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { QueryClient } from "@tanstack/react-query";
 import { QueryClientProvider } from "@tanstack/react-query";
 import MainSider from "@/components/Sidebar";
+import AdminLoginPage from "@/components/login";
 import { Toaster } from "react-hot-toast";
 
 const Context = createContext({});
@@ -14,11 +15,14 @@ interface ProviderProps {
 }
 
 export const ProviderContext = ({ children }: ProviderProps) => {
+  const user = true;
   const queryClient = new QueryClient();
   const [open, setOpen] = useState(false);
   return (
     <Context.Provider value={open}>
       <QueryClientProvider client={queryClient}>
+
+        {user ? <MainSider>{children}</MainSider> : <AdminLoginPage />}
         <Toaster />
         <MainSider>{children}</MainSider>
       </QueryClientProvider>
