@@ -5,6 +5,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { QueryClientProvider } from "@tanstack/react-query";
 import MainSider from "@/components/Sidebar";
 import AdminLoginPage from "@/components/login";
+import { Toaster } from "react-hot-toast";
 
 const Context = createContext({});
 export const useProvider = () => useContext(Context);
@@ -20,7 +21,10 @@ export const ProviderContext = ({ children }: ProviderProps) => {
   return (
     <Context.Provider value={open}>
       <QueryClientProvider client={queryClient}>
+
         {user ? <MainSider>{children}</MainSider> : <AdminLoginPage />}
+        <Toaster />
+        <MainSider>{children}</MainSider>
       </QueryClientProvider>
     </Context.Provider>
   );
