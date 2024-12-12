@@ -1,8 +1,37 @@
-import { graphql } from "@/gql";
+import { gql } from "graphql-tag";
 
-export const GetSignedURL = graphql(`#graphql
-  #graphql
-  query getSignedURL($fileName: String!, $fileType: String!) {
-    getSignedURL(fileName: $fileName, fileType: $fileType)
+export const GetSignedURL = gql`
+  query GetSignedUrl($fileName: String!, $fileType: String!) {
+    getSignedUrl(fileName: $fileName, fileType: $fileType)
   }
-`);
+`;
+
+export const getAdmin = gql`
+  query UseAdmin {
+  useAdminData {
+    id
+    email
+    profileImage
+    name
+  }
+}
+`;
+
+export const verifyAdminQuery = gql`
+  query VerifyAdmin($email: String!, $password: String!) {
+    VerifyAdmin(email: $email, password: $password)
+  }
+`;
+
+export const getEmployees = gql`
+  query Employees {
+  employees {
+    id
+    name
+    email
+    profileImage
+    position
+   
+  }
+}
+`;

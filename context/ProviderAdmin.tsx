@@ -1,31 +1,42 @@
 "use client";
-// main context provider
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useState } from "react";
 import { QueryClient } from "@tanstack/react-query";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import MainSider from "@/components/Sidebar";
 import AdminLoginPage from "@/components/login";
 import { Toaster } from "react-hot-toast";
+import { useAdmin } from "@/hooks/useUser";
 
 const Context = createContext({});
 export const useProvider = () => useContext(Context);
+
+// Create QueryClient instance outside component
+const queryClient = new QueryClient();
 
 interface ProviderProps {
   children: React.ReactNode;
 }
 
-export const ProviderContext = ({ children }: ProviderProps) => {
-  const user = true;
-  const queryClient = new QueryClient();
+// Create a separate component for the content that uses React Query hooks
+const ProviderContent = ({ children }: ProviderProps) => {
+  const { data } = useAdmin();
+  console.log(data);
   const [open, setOpen] = useState(false);
+
   return (
     <Context.Provider value={open}>
-      <QueryClientProvider client={queryClient}>
-
-        {user ? <MainSider>{children}</MainSider> : <AdminLoginPage />}
-        <Toaster />
-        <MainSider>{children}</MainSider>
-      </QueryClientProvider>
+        {data ? <MainSider>{children}</MainSider> : <AdminLoginPage />}
+      <Toaster />
     </Context.Provider>
+  );
+};
+
+export const ProviderContext = ({ children }: ProviderProps) => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ProviderContent>{children}</ProviderContent>
+      <ReactQueryDevtools />
+    </QueryClientProvider>
   );
 };
