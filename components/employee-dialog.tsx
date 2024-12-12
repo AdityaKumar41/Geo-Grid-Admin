@@ -50,7 +50,7 @@ const employeeFormSchema = z.object({
 type EmployeeFormData = z.infer<typeof employeeFormSchema>;
 
 type SignedURLResponse = {
-  getSignedURL: string;
+  getSignedUrl: string;
 };
 
 interface AddEmployeeDialogProps {
@@ -100,15 +100,11 @@ export function AddEmployeeDialog({
 
   const getSignedURLForUpload = async (file: File) => {
     try {
-      // console.log("file is", file);
-      const { getSignedURL } = await graphqlClient.request<SignedURLResponse>(
-        GetSignedURL as any,
-        {
-          filename: file.name,
-          fileType: file.type,
-        }
-      );
-      return getSignedURL;
+      const response = await graphqlClient.request<SignedURLResponse>(GetSignedURL, {
+        fileName: file.name,
+        fileType: file.type,
+      });
+      return response.getSignedUrl;
     } catch (error) {
       console.error("Failed to get signed URL:", error);
       throw error;
@@ -136,49 +132,58 @@ export function AddEmployeeDialog({
     try {
       let uploadedImageUrl = "";
 
-      console.log("data is", data);
-
       // Handle file upload if a new file is selected
-      if (data.profilePicture) {
-        if (data.profilePicture instanceof File) {
-          try {
-            const signedURL = await getSignedURLForUpload(data.profilePicture);
-            console.log("signedURL is", signedURL);
-            if (!signedURL) throw new Error("Failed to get signed URL");
+      if (data.profilePicture instanceof File) {
+        try {
+          const signedURL = await getSignedURLForUpload(data.profilePicture);
+          if (!signedURL) throw new Error("Failed to get signed URL");
 
-            await axios.put(signedURL, data.profilePicture, {
-              headers: {
-                "Content-Type": data.profilePicture.type,
-              },
-            });
+          await axios.put(signedURL, data.profilePicture, {
+            headers: {
+              "Content-Type": data.profilePicture.type,
+            },
+          });
 
-            uploadedImageUrl = signedURL.split("?")[0];
-          } catch (uploadError) {
-            console.error("File upload failed:", uploadError);
-            toast.error("Failed to upload profile picture");
-            toast.dismiss(loadingToast);
-            return;
-          }
-        } else if (typeof data.profilePicture === "string") {
-          uploadedImageUrl = data.profilePicture;
+          // Extract the base URL without query parameters
+          uploadedImageUrl = signedURL.split("?")[0];
+        } catch (uploadError) {
+          console.error("File upload failed:", uploadError);
+          toast.error("Failed to upload profile picture");
+          toast.dismiss(loadingToast);
+          return;
         }
       }
 
+      console.log(data, uploadedImageUrl)
+
+      // Format the data to match the CreateEmployeeInput type
       const employeeData = {
-        name: data.fullName,
-        email: data.email,
-        phoneNo: data.phoneNo,
-        position: data.department,
-        // employeeId: data.employeeId,
-        profileImage: uploadedImageUrl || null,
-        gender: data.gender,
-        age: data.age,
+        input: {
+          id: data.employeeId,
+          name: data.fullName,
+          email: data.email,
+          phoneNo: data.phoneNo,
+          position: data.department,
+          profileImage: uploadedImageUrl || null,
+          gender: data.gender,
+          age: data.age,
+        }
       };
 
-      mutate(employeeData);
-      toast.success("Employee added successfully!");
-      resetForm();
-      onClose();
+      console.log("Employee data to mutate:", employeeData);
+
+      // Call the mutation
+      mutate(employeeData, {
+        onSuccess: () => {
+          toast.success("Employee added successfully!");
+          resetForm();
+          onClose();
+        },
+        onError: (error) => {
+          console.error("Mutation error:", error);
+          toast.error("Failed to add employee");
+        },
+      });
     } catch (error) {
       console.error("Failed to add employee:", error);
       toast.error("Failed to add employee");

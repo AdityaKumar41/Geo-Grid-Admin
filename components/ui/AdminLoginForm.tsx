@@ -1,30 +1,58 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertCircle } from "lucide-react";
+import { graphqlClient } from "@/client/app";
+import { verifyAdminQuery } from "@/graphql/user";
+import { toast } from "react-hot-toast";
+import { useQueryClient } from "@tanstack/react-query";
+
+type VerifyAdminResponse = {
+  VerifyAdmin: string;
+};
 
 export default function AdminLoginForm() {
+  const queryClient = useQueryClient();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async(e:React.FormEvent)=>{
     e.preventDefault();
-    setError("");
-
-    if (!username || !password) {
-      setError("Please enter both username and password.");
+    if(!username || !password){
+      toast.error("Please enter both username and password.");
       return;
     }
 
-    // Here you would typically make an API call to authenticate the user
-    console.log("Login attempt with:", { username, password });
-    // For demo purposes, let's just log the attempt
-    alert("Login attempt registered. Check the console for details.");
-  };
+    try {
+
+      console.log(username,password);
+      setIsLoading(true);
+      const response = await graphqlClient.request<VerifyAdminResponse>(verifyAdminQuery, {
+        email: username,
+        password: password
+      });
+
+      console.log(response);
+      if (response) {
+        toast.success("Login successful!");
+        // store in session storage
+        sessionStorage.setItem("token", response.VerifyAdmin);
+
+        // Add your navigation or success logic here
+      } else {
+        toast.error("Invalid username or password.");
+      }
+    } catch (error) {
+      toast.error("An error occurred during login.");
+    } finally {
+      await queryClient.invalidateQueries({ queryKey: ['admin'] });
+      setIsLoading(false);
+    }
+  },[username,password])
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -49,14 +77,8 @@ export default function AdminLoginForm() {
           required
         />
       </div>
-      {error && (
-        <div className="text-red-500 text-sm flex items-center gap-1">
-          <AlertCircle size={16} />
-          <span>{error}</span>
-        </div>
-      )}
-      <Button type="submit" className="w-full">
-        Login
+      <Button type="submit" className="w-full" disabled={isLoading}>
+        {isLoading ? "Loading..." : "Login"}
       </Button>
     </form>
   );

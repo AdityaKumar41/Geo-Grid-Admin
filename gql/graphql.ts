@@ -66,14 +66,20 @@ export enum AttendanceStatus {
   CheckedOut = 'CHECKED_OUT'
 }
 
+export type CreateEmployeeInput = {
+  age: Scalars['Int']['input'];
+  email: Scalars['String']['input'];
+  gender: Scalars['String']['input'];
+  id: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  phoneNo: Scalars['String']['input'];
+  position: Scalars['String']['input'];
+  profileImage?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type Employee = {
   __typename?: 'Employee';
-  admin: Admin;
-  adminId: Scalars['ID']['output'];
   age: Scalars['Int']['output'];
-  attendancePairs: Array<AttendancePair>;
-  attendances: Array<Attendance>;
-  createdAt: Scalars['DateTime']['output'];
   email: Scalars['String']['output'];
   gender: Scalars['String']['output'];
   id: Scalars['ID']['output'];
@@ -81,11 +87,12 @@ export type Employee = {
   phoneNo: Scalars['String']['output'];
   position: Scalars['String']['output'];
   profileImage?: Maybe<Scalars['String']['output']>;
-  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type Mutation = {
   __typename?: 'Mutation';
+  checkIn: AttendancePair;
+  checkOut: AttendancePair;
   createAttendance: Attendance;
   createAttendancePair: AttendancePair;
   createEmployee: Employee;
@@ -93,6 +100,16 @@ export type Mutation = {
   updateAttendance: Attendance;
   updateAttendancePair: AttendancePair;
   updateEmployee: Employee;
+};
+
+
+export type MutationCheckInArgs = {
+  employeeId: Scalars['ID']['input'];
+};
+
+
+export type MutationCheckOutArgs = {
+  employeeId: Scalars['ID']['input'];
 };
 
 
@@ -114,10 +131,10 @@ export type MutationCreateAttendancePairArgs = {
 
 
 export type MutationCreateEmployeeArgs = {
-  adminId: Scalars['ID']['input'];
   age: Scalars['Int']['input'];
   email: Scalars['String']['input'];
   gender: Scalars['String']['input'];
+  input: CreateEmployeeInput;
   name: Scalars['String']['input'];
   phoneNo: Scalars['String']['input'];
   position: Scalars['String']['input'];
@@ -149,14 +166,17 @@ export type MutationUpdateEmployeeArgs = {
   gender?: InputMaybe<Scalars['String']['input']>;
   id: Scalars['ID']['input'];
   name?: InputMaybe<Scalars['String']['input']>;
-  phoneNo?: InputMaybe<Scalars['String']['input']>;
   position?: InputMaybe<Scalars['String']['input']>;
   profileImage?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Query = {
   __typename?: 'Query';
-  VerifyAdmin?: Maybe<Admin>;
+  AttendanceByDate: Array<Attendance>;
+  AttendanceByEmployee: Array<Attendance>;
+  AttendanceByWeek: Array<Attendance>;
+  VerifyAdmin?: Maybe<Scalars['String']['output']>;
+  VerifyEmployee?: Maybe<Scalars['String']['output']>;
   admin?: Maybe<Admin>;
   admins: Array<Admin>;
   attendance?: Maybe<Attendance>;
@@ -166,10 +186,33 @@ export type Query = {
   employee?: Maybe<Employee>;
   employees: Array<Employee>;
   getSignedUrl?: Maybe<Scalars['String']['output']>;
+  useAdmin?: Maybe<Admin>;
+  useEmployee?: Maybe<Employee>;
+};
+
+
+export type QueryAttendanceByDateArgs = {
+  date: Scalars['DateTime']['input'];
+};
+
+
+export type QueryAttendanceByEmployeeArgs = {
+  employeeId: Scalars['ID']['input'];
+};
+
+
+export type QueryAttendanceByWeekArgs = {
+  week: Scalars['Int']['input'];
 };
 
 
 export type QueryVerifyAdminArgs = {
+  email: Scalars['String']['input'];
+  password: Scalars['String']['input'];
+};
+
+
+export type QueryVerifyEmployeeArgs = {
   email: Scalars['String']['input'];
   password: Scalars['String']['input'];
 };

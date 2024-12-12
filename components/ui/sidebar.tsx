@@ -1,8 +1,8 @@
 "use client";
 import { cn } from "@/lib/utils";
 import Link, { LinkProps } from "next/link";
-import React, { useState, createContext, useContext } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import React, { useState, createContext, useContext, forwardRef } from "react";
+import { AnimatePresence, motion, HTMLMotionProps } from "framer-motion";
 import { IconMenu2, IconX } from "@tabler/icons-react";
 
 interface Links {
@@ -70,14 +70,15 @@ export const Sidebar = ({
   );
 };
 
-export const SidebarBody = (props: React.ComponentProps<typeof motion.div>) => {
-  return (
-    <>
-      <DesktopSidebar {...props} />
-      <MobileSidebar {...(props as React.ComponentProps<"div">)} />
-    </>
-  );
-};
+export const SidebarBody = motion(
+  forwardRef<HTMLDivElement, HTMLMotionProps<"div"> & { className?: string }>(
+    ({ children, className, ...props }, ref) => (
+      <div ref={ref} className={cn("flex flex-col", className)} {...props}>
+        {children}
+      </div>
+    )
+  )
+);
 
 export const DesktopSidebar = ({
   className,
@@ -155,32 +156,32 @@ export const MobileSidebar = ({
   );
 };
 
-export const SidebarLink = ({
-  link,
-  className,
-  ...props
-}: {
-  link: Links;
-  className?: string;
-  props?: LinkProps;
-}) => {
-  const { open, animate } = useSidebar();
+interface SidebarLinkProps {
+  link: {
+    label: string;
+    href: string;
+    icon: React.ReactNode;
+    onClick?: () => void;
+  };
+}
+
+export const SidebarLink = ({ link }: SidebarLinkProps) => {
   return (
     <Link
       href={link.href}
+      onClick={(e) => {
+        if (link.onClick) {
+          e.preventDefault();
+          link.onClick();
+        }
+      }}
       className={cn(
-        "flex items-center justify-start gap-2  group/sidebar py-2",
-        className
+        "flex items-center justify-start gap-2  group/sidebar py-2"
       )}
-      {...props}
     >
       {link.icon}
 
       <motion.span
-        animate={{
-          display: animate ? (open ? "inline-block" : "none") : "inline-block",
-          opacity: animate ? (open ? 1 : 0) : 1,
-        }}
         className="text-neutral-700 dark:text-neutral-200 text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
       >
         {link.label}

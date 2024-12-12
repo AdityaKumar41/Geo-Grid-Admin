@@ -11,12 +11,21 @@ import { SidebarBody, SidebarLink } from "./ui/sidebar";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { useAdmin } from "@/hooks/useUser";
 
 interface MainSiderProps {
   children: React.ReactNode;
 }
+interface Admin {
+  id: string;
+  email: string;
+  profileImage: string;
+  name: string;
+}
+
 
 export default function MainSider({ children }: MainSiderProps) {
+  const { data, isLoading, isError } = useAdmin();
   const links = [
     {
       label: "Dashboard",
@@ -45,6 +54,10 @@ export default function MainSider({ children }: MainSiderProps) {
       icon: (
         <IconArrowLeft className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
+      onClick: () => {
+        sessionStorage.removeItem("token");
+        window.location.href = "/";
+      }
     },
   ];
   const [open, setOpen] = useState(false);
@@ -68,11 +81,11 @@ export default function MainSider({ children }: MainSiderProps) {
           <div>
             <SidebarLink
               link={{
-                label: "Manu Arora",
+                label: `${data?.name}`,
                 href: "#",
                 icon: (
                   <Image
-                    src="https://assets.aceternity.com/manu.png"
+                    src={data?.profileImage || ""}
                     className="h-7 w-7 flex-shrink-0 rounded-full"
                     width={50}
                     height={50}

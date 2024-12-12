@@ -39,128 +39,40 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-interface Employee {
-  id: number;
-  name: string;
-  email: string;
-  department: string;
-  avatar: string;
-}
+import { useGetEmployees } from "@/hooks/useEmployee";
+import { Employee } from "@/gql/graphql";
 
 const ITEMS_PER_PAGE = 8;
 const DEPARTMENTS = [
-  "Engineering",
-  "Marketing",
-  "Sales",
-  "HR",
-  "Finance",
+  "engineering",
+  "marketing",
+  "sales",
+  "hr",
+  "finance"
 ] as const;
 
-const hardcodedEmployees: Employee[] = [
-  {
-    id: 1,
-    name: "John Doe",
-    email: "john@example.com",
-    department: "Engineering",
-    avatar: "https://i.pravatar.cc/150?img=1",
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    email: "jane@example.com",
-    department: "Marketing",
-    avatar: "https://i.pravatar.cc/150?img=2",
-  },
-  {
-    id: 3,
-    name: "Bob Johnson",
-    email: "bob@example.com",
-    department: "Sales",
-    avatar: "https://i.pravatar.cc/150?img=3",
-  },
-  {
-    id: 4,
-    name: "Alice Brown",
-    email: "alice@example.com",
-    department: "HR",
-    avatar: "https://i.pravatar.cc/150?img=4",
-  },
-  {
-    id: 5,
-    name: "Charlie Davis",
-    email: "charlie@example.com",
-    department: "Engineering",
-    avatar: "https://i.pravatar.cc/150?img=5",
-  },
-  {
-    id: 6,
-    name: "Eva White",
-    email: "eva@example.com",
-    department: "Finance",
-    avatar: "https://i.pravatar.cc/150?img=6",
-  },
-  {
-    id: 7,
-    name: "Frank Miller",
-    email: "frank@example.com",
-    department: "Sales",
-    avatar: "https://i.pravatar.cc/150?img=7",
-  },
-  {
-    id: 8,
-    name: "Grace Lee",
-    email: "grace@example.com",
-    department: "Marketing",
-    avatar: "https://i.pravatar.cc/150?img=8",
-  },
-  {
-    id: 9,
-    name: "Henry Wilson",
-    email: "henry@example.com",
-    department: "Engineering",
-    avatar: "https://i.pravatar.cc/150?img=9",
-  },
-  {
-    id: 10,
-    name: "Ivy Chen",
-    email: "ivy@example.com",
-    department: "HR",
-    avatar: "https://i.pravatar.cc/150?img=10",
-  },
-  {
-    id: 11,
-    name: "Jack Taylor",
-    email: "jack@example.com",
-    department: "Finance",
-    avatar: "https://i.pravatar.cc/150?img=11",
-  },
-  {
-    id: 12,
-    name: "Karen Moore",
-    email: "karen@example.com",
-    department: "Sales",
-    avatar: "https://i.pravatar.cc/150?img=12",
-  },
-];
-
 export default function EmployeeList() {
-  const [employees, setEmployees] = useState<Employee[]>(hardcodedEmployees);
+  const { data, isLoading, isError } = useGetEmployees();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState<string>("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  const employees = data?.employees || [];
+
   // Filter employees based on search term and department
   const filteredEmployees = employees.filter((employee) => {
+    console.log('Employee:', employee);
+    console.log('Selected Department:', selectedDepartment);
+    
     const matchesSearch =
       !searchTerm ||
       employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      employee.department.toLowerCase().includes(searchTerm.toLowerCase());
+      employee.position.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesDepartment =
-      !selectedDepartment || employee.department === selectedDepartment;
+      !selectedDepartment || employee.position.toLowerCase() === selectedDepartment.toLowerCase();
 
     return matchesSearch && matchesDepartment;
   });
@@ -171,18 +83,17 @@ export default function EmployeeList() {
   const currentEmployees = filteredEmployees.slice(startIndex, endIndex);
 
   const addEmployee = (newEmployee: Omit<Employee, "id">) => {
-    const id = Math.max(...employees.map((e) => e.id)) + 1;
-    const employeeWithId: Employee = {
-      id,
-      ...newEmployee,
-      name: newEmployee.name || "Unknown",
-      email: newEmployee.email || "",
-      department: newEmployee.department || "Unassigned",
-      avatar: newEmployee.avatar || `/placeholder.svg?height=40&width=40`,
-    };
-    setEmployees([...employees, employeeWithId]);
+    console.log("Adding employee:", newEmployee);
     setIsDialogOpen(false);
   };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (isError) {
+    return <div>Error loading employees</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -231,7 +142,7 @@ export default function EmployeeList() {
                         setCurrentPage(1);
                       }}
                     >
-                      {dept}
+                      {dept.charAt(0).toUpperCase() + dept.slice(1)}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
@@ -275,7 +186,7 @@ export default function EmployeeList() {
                     <div className="flex items-center space-x-3">
                       <Avatar>
                         <AvatarImage
-                          src={employee.avatar}
+                          src={employee.profileImage}
                           alt={employee.name}
                         />
                         <AvatarFallback>
@@ -298,7 +209,7 @@ export default function EmployeeList() {
                   <TableCell>
                     <div className="flex items-center">
                       <Briefcase className="mr-2 h-4 w-4 text-gray-400" />
-                      {employee.department}
+                      {employee.position}
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
@@ -365,8 +276,8 @@ export default function EmployeeList() {
           addEmployee({
             name: dialogEmployee.fullName,
             email: dialogEmployee.email,
-            department: dialogEmployee.department,
-            avatar: dialogEmployee.profilePicture,
+            position: dialogEmployee.department,
+            profileImage: dialogEmployee.profilePicture,
           })
         }
       />

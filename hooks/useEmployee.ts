@@ -1,37 +1,44 @@
 import { graphqlClient } from "@/client/app";
-import { Employee, MutationCreateEmployeeArgs } from "@/gql/graphql";
+import { Employee } from "@/gql/graphql";
 import { createEmployeeTypes } from "@/graphql/mutation";
-import { GetSignedURL } from "@/graphql/user";
+import { getEmployees } from "@/graphql/user";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-// useCreateEmployee
-export const useCreateEmployee = (employeeData: {
-  fullName: string;
-  email: string;
-  phoneNo: string;
-  department: string;
-  employeeId: string;
-  profilePicture: string | null;
-}) => {
-  const queryClient = useQueryClient();
+// Define the input type to match the dialog's employeeData structure
+type CreateEmployeeInput = {
+  input: {
+    id: string;
+    name: string;
+    email: string;
+    position: string;
+    age: number;
+    phoneNo: string;
+    gender: string;
+    profileImage: string | null;
+  }
+};
 
+// useCreateEmployee
+export const useCreateEmployee = () => {
+  const queryClient = useQueryClient();
+  
   const mutation = useMutation({
-    mutationFn: (employeeData: Omit<Employee, "id" | "password">) =>
-      graphqlClient.request(createEmployeeTypes as any, {
-        input: {
-          name: employeeData.name,
-          email: employeeData.email,
-          position: employeeData.position,
-          age: employeeData.age,
-          phoneNo: employeeData.phoneNo,
-          gender: employeeData.gender,
-          profileImage: employeeData.profileImage,
-        },
-      }),
+    mutationFn: (employeeData: CreateEmployeeInput) =>
+      graphqlClient.request(createEmployeeTypes as any, employeeData),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["employee"] });
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
     },
   });
 
   return mutation;
+};
+
+// get employees
+export const useGetEmployees = () => {
+  const data = useQuery({
+    queryKey: ["employees"],
+    queryFn: () => graphqlClient.request(getEmployees as any),
+  });
+
+  return data;
 };
